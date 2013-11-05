@@ -1,0 +1,100 @@
+def configDir = new File(rootDir, 'config')
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '1.7'
+}
+
+allprojects {
+  apply plugin: 'java'
+  apply plugin: 'idea'
+  apply plugin: 'eclipse'
+
+  configurations {
+    provided
+    provided.extendsFrom(compile)
+  }
+}
+
+configure(subprojects) {
+  apply plugin: 'checkstyle'
+  apply plugin: 'findbugs'
+
+  group = 'com.antwerkz.afton'
+  version = '0.1-SNAPSHOT'
+
+  sourceCompatibility = '1.7'
+  targetCompatibility = '1.7'
+
+  configurations {
+    provided
+  }
+
+  project.archivesBaseName = "afton-${project.name}"
+
+  repositories {
+    mavenCentral()
+    mavenLocal()
+  }
+
+  dependencies {
+    testCompile 'junit:junit:4.11'
+  }
+
+  sourceSets.main.compileClasspath += configurations.provided
+  sourceSets.test.compileClasspath += configurations.provided
+
+  if (properties['xlint']) {
+    tasks.withType(Compile) {
+      options.compilerArgs << "-Xlint:unchecked"
+    }
+  }
+
+  project.ext.buildingWith = { n -> project.hasProperty(n) && project.property(n).toBoolean()
+  }
+
+  /* Code quality */
+  checkstyle {
+    configFile = new File("$configDir/checkstyle.xml")
+  }
+
+  findbugs {
+    sourceSets = [sourceSets.main]
+  }
+
+  tasks.withType(FindBugs) {
+    reports {
+      xml.enabled = project.buildingWith('xmlReports.enabled')
+      html.enabled = !project.buildingWith('xmlReports.enabled')
+    }
+  }
+
+  javadoc {
+    options.author = true
+    options.version = true
+    options.links 'http://docs.oracle.com/javase/7/docs/api/'
+  }
+}
+
+project(':core') {
+  dependencies {
+    compile 'org.kohsuke:github-api:1.44'
+    compile 'ch.qos.logback:logback-core:1.0.13'
+    compile 'org.slf4j:slf4j-api:1.7.5'
+    compile 'junit:junit:4.11'
+  }
+}
+
+project(':junit') {
+  dependencies {
+    compile 'junit:junit:4.11'
+    compile project(':core')
+  }
+}
+
+apply from: 'gradle/ide-settings.gradle'
+
