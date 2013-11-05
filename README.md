@@ -11,7 +11,7 @@ To ignore tests based on open github issues, mark up your tests like this:
 ```java
 @RunWith(AftonJUnitRunner.class)
 public class GitHubTest {
-  @org.junit.Test
+  @Test
   @GitHubIgnore(repository = "evanchooly/afton", issue = 1)
   public void ignoreMe() {
     fail("Forced failure");
