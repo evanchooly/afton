@@ -15,6 +15,9 @@ public class Ignorant {
 
   public static Status ignore(GitHubIgnore annotation) {
     try {
+      if(annotation == null) {
+        return Status.NOT_TRACKING;
+      }
       GitHub gitHub = GitHub.connect();
       GHRepository repository = gitHub.getRepository(annotation.repository());
       GHIssue issue = repository.getIssue(annotation.issue());
@@ -24,7 +27,7 @@ public class Ignorant {
         return Status.CLOSED;
       }
     } catch (FileNotFoundException e) {
-      return Status.NONEXISTANT;
+      return Status.NONEXISTENT;
     } catch (IOException e) {
       LOG.error(e.getMessage(), e);
       throw new RuntimeException(e.getMessage(), e);
