@@ -39,4 +39,15 @@ _Pending_
 Jira
 ------
 
-_Pending_
+To ignore tests based on open jira issues, mark up your tests like this:
+
+```java
+@RunWith(AftonJUnitRunner.class)
+public class JiraTest {
+  @Test
+  @JiraIgnore(server = "https://jira.example.com", issue = "DUDE-1")
+  public void ignoreMe() {
+    fail("Forced failure");
+  }
+}
+```
