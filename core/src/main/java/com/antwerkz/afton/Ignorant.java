@@ -50,19 +50,17 @@ public class Ignorant {
     }
     try {
       JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-      URI jiraServerUri = new URI(annotation.server());
       JiraRestClient restClient = factory
-          .createWithBasicHttpAuthentication(jiraServerUri, getUserName(), getPassword());
-      Issue issue = null;
+          .createWithBasicHttpAuthentication(new URI(annotation.server()), getUserName(), getPassword());
       try {
-        issue = restClient.getIssueClient().getIssue(annotation.issue()).get();
+        Issue issue = restClient.getIssueClient().getIssue(annotation.issue()).get();
+        if (!issue.getStatus().getName().equalsIgnoreCase("CLOSED")) {
+          return Status.OPEN;
+        } else {
+          return Status.CLOSED;
+        }
       } catch (ExecutionException e) {
         return Status.NONEXISTENT;
-      }
-      if (issue != null && !issue.getStatus().getName().equalsIgnoreCase("CLOSED")) {
-        return Status.OPEN;
-      } else {
-        return Status.CLOSED;
       }
     } catch (URISyntaxException | InterruptedException e) {
       throw new RuntimeException(e.getMessage(), e);
