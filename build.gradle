@@ -1,8 +1,16 @@
 def configDir = new File(rootDir, 'config')
 
-repositories {
-  mavenLocal()
-  mavenCentral()
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    }
+
+    dependencies {
+        classpath 'com.antwerkz.github:github-release-gradle-plugin:1.0.0-RC2'
+        classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.3'
+    }
 }
 
 task wrapper(type: Wrapper) {
@@ -97,4 +105,5 @@ project(':junit') {
 }
 
 apply from: 'gradle/ide-settings.gradle'
+apply from: 'gradle/release-process.gradle'
 
