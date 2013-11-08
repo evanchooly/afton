@@ -14,7 +14,7 @@ import org.junit.runners.model.InitializationError;
 public class AftonJUnitRunner extends BlockJUnit4ClassRunner {
   private boolean trace = false;
 
-  private Status gitHubStatus;
+  private Status issueStatus;
 
   /**
    * Creates a BlockJUnit4ClassRunner to run {@code klass}
@@ -44,19 +44,32 @@ public class AftonJUnitRunner extends BlockJUnit4ClassRunner {
       trace("method = [" + method.getName() + "], notifier = [" + notifier + "]");
       this.method = method;
       this.notifier = notifier;
+      github(method);
+      jira(method);
+      testName = format("%s#%s", getTestClass().getJavaClass().getSimpleName(), method.getName());
+    }
+
+    private void github(final FrameworkMethod method) {
       GitHubIgnore github = method.getAnnotation(GitHubIgnore.class);
-      gitHubStatus = Ignorant.ignore(github);
-      if (gitHubStatus != Status.NOT_TRACKING) {
+      issueStatus = Ignorant.ignore(github);
+      if (issueStatus != Status.NOT_TRACKING) {
         url = format("https://github.com/%s/issues/%d", github.repository(), github.issue());
       }
-      testName = format("%s#%s", getTestClass().getJavaClass().getSimpleName(), method.getName());
+    }
+
+    private void jira(final FrameworkMethod method) {
+      JiraIgnore jira = method.getAnnotation(JiraIgnore.class);
+      issueStatus = Ignorant.ignore(jira);
+      if (jira != null) {
+        url = format("%s/browse/%s", jira.server(), jira.issue());
+      }
     }
 
     @Override
     public void fireTestFailure(final Failure failure) {
       trace("AftonJUnitRunner.fireTestFailure");
       trace("failure = [" + failure + "]");
-      switch (gitHubStatus) {
+      switch (issueStatus) {
         case CLOSED:
           System.out.printf("%s is still monitoring %s even though it has been closed.%n", testName, url);
           notifier.fireTestFailure(failure);
@@ -84,7 +97,7 @@ public class AftonJUnitRunner extends BlockJUnit4ClassRunner {
     public void fireTestFinished(final Description description) {
       trace("AftonJUnitRunner$AftonRunNotifier.fireTestFinished");
       trace("description = [" + description + "]");
-      switch (gitHubStatus) {
+      switch (issueStatus) {
         case CLOSED:
           System.out.printf("%s is still monitoring %s even though it has been closed.%n", testName, url);
           break;
@@ -92,7 +105,6 @@ public class AftonJUnitRunner extends BlockJUnit4ClassRunner {
           System.out.printf("%s is monitoring %s even though it doesn't exist.%n", testName, url);
           break;
       }
-
       notifier.fireTestFinished(description);
     }
 
