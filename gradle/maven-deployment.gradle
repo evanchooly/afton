@@ -1,0 +1,66 @@
+configure(subprojects) {
+    apply plugin: 'nexus'
+
+    project.ext.mavenDeployers = []
+
+    def pom = { config ->
+        project.mavenDeployers*.pom config
+    }
+
+    install {
+        project.mavenDeployers << repositories.mavenInstaller
+    }
+
+    uploadArchives {
+        project.mavenDeployers << repositories.mavenDeployer {
+            def nexusCredentials = [
+                userName: project.properties.nexusUsername,
+                password: project.properties.nexusPassword
+            ]
+
+            snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots') {
+                authentication(nexusCredentials)
+            }
+            repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+                authentication(nexusCredentials)
+            }
+        }
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            }
+        }
+    }
+
+    modifyPom {
+        project {
+            name = 'Afton'
+            description = 'Suppress unit test failures while github/jira issues are open'
+            url 'https://github.com/evanchooly/afton.git'
+            
+            scm {
+                url 'https://github.com/evanchooly/afton.git'
+                connection 'scm:git:https://github.com/evanchooly/afton.git'
+            }
+
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+
+            developers {
+                developer {
+                    name 'Justin Lee (jlee@antwerkz.com)'
+                }
+            }
+        }
+
+        whenConfigured { resultPom ->
+            resultPom.dependencies.removeAll { dep -> dep.scope != 'compile' }
+            resultPom.dependencies*.scope = null
+        }
+    }
+}
