@@ -33,7 +33,7 @@ configure(subprojects) {
   apply plugin: 'findbugs'
 
   group = 'com.antwerkz.afton'
-  version = '0.2-SNAPSHOT'
+  version = '0.1'
 
   sourceCompatibility = '1.7'
   targetCompatibility = '1.7'
@@ -105,5 +105,6 @@ project(':junit') {
 }
 
 apply from: 'gradle/ide-settings.gradle'
+apply from: 'gradle/maven-deployment.gradle'
 apply from: 'gradle/release-process.gradle'
 
